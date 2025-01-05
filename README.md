@@ -124,10 +124,11 @@ Example log entry:
 ## Notes
 
 **Scheduled Rules** : To apply scheduled rules, create a file like /etc/iptables/scheduled_rules.txt with the following format:
+
+```plaintext
 ADD,192.168.1.101
 REMOVE,192.168.1.100
 
 ```
-The script will process these rules and apply them accordingly.*
 
-```
+The script will process these rules and apply them accordingly.
