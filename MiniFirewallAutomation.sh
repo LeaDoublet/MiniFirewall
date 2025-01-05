@@ -43,6 +43,30 @@ search_rule() {
     fi
 }
 
+# Apply rules from file
+apply_rules_from_file() {
+    local file_path="/etc/iptables/scheduled_rules.txt"
+    if [[ -f $file_path ]]; then
+        echo "Applying scheduled rules from $file_path"
+        while IFS=, read -r action ip; do
+            if validate_ip "$ip"; then
+                case $action in
+                ADD)
+                    add_rule "$ip"
+                    ;;
+                REMOVE)
+                    remove_rule "$ip"
+                    ;;
+                *)
+                    echo "Invalid action $action for IP $ip"
+                    ;;
+                esac
+            fi
+        done <"$file_path"
+    else
+        echo "No scheduled rules file found at $file_path."
+    fi
+}
 
 
 # Main menu
@@ -50,18 +74,20 @@ while true; do
 echo "Mini Firewall Automation"
 echo "--------------------------"
 if [[ $EUID -ne 0 ]]; then
-echo "This script must be run as root (use sudo)." >&2
-exit 1
+    echo "This script must be run as root (use sudo)." >&2
+    exit 1
 fi
 echo "1) Add a rule"
 echo "2) Remove a rule"
 echo "3) List current rules"
-echo "4) Exit"
+echo "4) Search for a rule"
+echo "5) Apply rules from file"
+echo "6) Exit"
 read -p "Choose an option: " choice
 echo "$(date): User chose option $choice" >> firewall.log
 case $choice in
 1)
-read -p "Enter the IP to block: " ip
+    read -p "Enter the IP to block: " ip
 if validate_ip $ip; then
     add_rule $ip
 else
@@ -69,19 +95,27 @@ else
 fi
 ;;
 2)
-read -p "Enter the IP to unblock: " ip
-remove_rule $ip
+    read -p "Enter the IP to unblock: " ip
+    remove_rule $ip
 ;;
 3)
-list_rules
+    list_rules
 ;;
 4)
-sudo iptables-save > /etc/iptables/rules.v4
-echo "Goodbye!"
-break
+    read -p "Enter the IP to search for: " ip
+    search_rule $ip
+;;
+;;
+5)
+    apply_rules_from_file
+;;
+6)
+    sudo iptables-save > /etc/iptables/rules.v4
+    echo "Goodbye!"
+    break
 ;;
 *)
-echo "Invalid option."
+    echo "Invalid option."
 ;;
 esac
 done
