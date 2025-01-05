@@ -105,7 +105,6 @@ fi
     read -p "Enter the IP to search for: " ip
     search_rule $ip
 ;;
-;;
 5)
     apply_rules_from_file
 ;;
